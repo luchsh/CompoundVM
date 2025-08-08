@@ -147,8 +147,8 @@ $(BOOTJDK8)/:
 	#cp -f $(WORKSPACE)/bin/linux-$(CVM_ARCH)/hsdis-$(ARCH_DIR).so $$(dirname $$(find $@ -name libjava.so))
 
 jdk8u/jdk/src:
-	wget -nc https://github.com/openjdk/jdk8u/archive/refs/tags/jdk8u382-b03.tar.gz
-	[[ -d $(JDK8_SRCROOT) ]] || (mkdir -p $(JDK8_SRCROOT) && tar -xzf jdk8u382-b03.tar.gz -C $(JDK8_SRCROOT) --strip-components=1)
+	rm -rf $(JDK8_SRCROOT)
+	git clone -b jdk8u382-b03 $(WORKSPACE)/.git $(JDK8_SRCROOT)
 
 cvm8: jdk8vm17
 
