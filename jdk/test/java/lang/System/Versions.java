@@ -76,6 +76,8 @@ public class Versions {
         String runtimeVersion = getProperty("java.runtime.version");
         String specVersion    = getProperty("java.specification.version");
 
+        boolean isVM17 = "17".equals("java.vm.specification.version");
+
         if (! (javaVersion.startsWith(specVersion) &&
                runtimeVersion.startsWith(specVersion)))
             throw new Exception("Invalid version-related system properties");
@@ -95,7 +97,7 @@ public class Versions {
         cl = new URLClassLoader(new URL[]{new File("./").toURL()}, null);
 
         checkClassVersion(majorVersion    , minorVersion    , true );
-        checkClassVersion(majorVersion + 1, minorVersion    , false);
-        checkClassVersion(majorVersion    , minorVersion + 1, false);
+        checkClassVersion(majorVersion + 1, minorVersion    , isVM17);
+        checkClassVersion(majorVersion    , minorVersion + 1, isVM17);
     }
 }
