@@ -36,8 +36,8 @@ else ifeq ($(CVM_ARCH),aarch64)
 else
 	ARCH_ERROR := 1
 endif
-BUILDDIR := $(WORKSPACE)/cvm/build
-VERSION := $(shell cat $(WORKSPACE)/cvm/conf/version)
+BUILDDIR := $(WORKSPACE)/build
+VERSION := $(shell cat $(WORKSPACE)/conf/version)
 OUTPUTDIR := $(WORKSPACE)/output
 DISTRO_NAME := CompoundVM_$(VERSION)_linux_$(ARCH_DIR1)
 DISTRO_JVM_PATCH_NAME := CompoundVM_$(VERSION)_jvm_patch_linux_$(ARCH_DIR1)
@@ -46,9 +46,9 @@ CVM8_JARDIR := $(CVM8DIR)/jre/lib
 CVM8_LIBDIR := $(CVM8DIR)/jre/lib/$(ARCH_DIR)
 MODE ?= release
 JAR ?= $(BOOTJDK17)/bin/jar
-JDK17_SRCROOT := $(WORKSPACE)
-CVM8_SRCROOT := $(WORKSPACE)/cvm
-JDK8_SRCROOT := $(CVM8_SRCROOT)/jdk8u
+CVM8_SRCROOT := $(WORKSPACE)
+JDK8_SRCROOT := $(CVM8_SRCROOT)/jdk8
+JDK17_SRCROOT := $(WORKSPACE)/jdk17
 SRC_BUILDDIR_8 :=
 SRC_BUILDDIR_17 :=
 SCRIPTS_DIR ?= $(WORKSPACE)/scripts
@@ -145,9 +145,11 @@ $(BOOTJDK8)/:
 	$(call setup_boot_jdk,$(BOOTJDK8_URL),$@)
 	#cp -f $(WORKSPACE)/bin/linux-$(CVM_ARCH)/hsdis-$(ARCH_DIR).so $$(dirname $$(find $@ -name libjava.so))
 
-jdk8u/jdk/src:
-	wget -nc https://github.com/openjdk/jdk8u/archive/refs/tags/jdk8u452-ga.tar.gz
-	[[ -d $(JDK8_SRCROOT) ]] || (mkdir -p $(JDK8_SRCROOT) && tar -xzf jdk8u452-ga.tar.gz -C $(JDK8_SRCROOT) --strip-components=1)
+$(JDK8_SRCROOT)/jdk/src:
+	git worktree add $(JDK8_SRCROOT) cvm8/jdk8u
+
+$(JDK17_SRCROOT)/src:
+	git worktree add $(JDK17_SRCROOT) cvm8/jdk17u
 
 cvm8: jdk8vm17
 
@@ -213,7 +215,7 @@ endif
 	@echo "###### Done ######"
 	@echo
 
-build_jdk8u: -bootstrap jdk8u/jdk/src
+build_jdk8u: -bootstrap $(JDK8_SRCROOT)/jdk/src
 	{ cd $(JDK8_SRCROOT); \
 		if [[ "x$$(find ./build -type f -name config.log | grep $(MODE))" = "x" ]]; then \
 			bash configure --with-debug-level=$(MODE) \
@@ -231,8 +233,9 @@ build_jdk8u: -bootstrap jdk8u/jdk/src
 	}
 
 # compile hotspot and java.base from jdk17u
-build_jdk17u: -bootstrap
+build_jdk17u: -bootstrap $(JDK17_SRCROOT)/src
 	{ \
+		cd $(JDK17_SRCROOT); \
 		if [[ "x$$(find ./build -type f -name config.log | grep $(MODE))" = "x" ]]; then \
 			bash configure --with-debug-level=$(MODE) \
 											--with-boot-jdk=$(BOOTJDK17) \
@@ -247,8 +250,8 @@ build_jdk17u: -bootstrap
 											--with-vendor-name="CompoundVM" \
 											; \
 		fi; \
+		make $(JDK_MAKE_OPTS) CONF=linux-$(CVM_ARCH)-server-$(MODE) hotspot jdk.jdwp.agent; \
 	}
-	make $(JDK_MAKE_OPTS) CONF=linux-$(CVM_ARCH)-server-$(MODE) hotspot jdk.jdwp.agent
 
 ################ alternative kernel classes ########
 # here we copy the JDK17 kernel classes to separate diretory,
