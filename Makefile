@@ -298,7 +298,7 @@ $(JTREG):
 
 # minimize the effort to download source code
 ifeq ($(SKIP_BUILD), true)
--setup_jtreg8: -init-dirs $(JTREG) jdk8u/jdk/src
+-setup_jtreg8: -init-dirs $(JTREG) $(JDK8_SRCROOT)/jdk/src
 else
 -setup_jtreg8: $(JTREG) jdk8vm17
 endif
@@ -321,55 +321,30 @@ define run_jtreg8_test
 	@{ cd ${JT8_DIR} && ${CUR_CMD}; }
 endef
 
-# Overwrite upstream source file with the modified version shipped in CompoundVM repo
-# $1   repository name from within cvm/overlay
-# $2   filepath relative to $1
-# $3   destination repo directory
-define overlay_single
-	$(eval REPO=$(1))
-	$(eval FILEPATH=$(2))
-	$(eval DESTDIR=$(3))
-	@{ test -e $(DESTDIR)/$(FILEPATH)_origin || cp -f $(DESTDIR)/$(FILEPATH) $(DESTDIR)/$(FILEPATH)_origin; }
-	@{ cd cvm/overlay/$(REPO) && cp -f --parents $(FILEPATH) $(DESTDIR)/; }
-endef
-
 JT_OPTS_EXCLUDE=-exclude:$(JDK8_SRCROOT)/jdk/test/ProblemList.txt -exclude:$(CVM8_SRCROOT)/conf/jtreg_jdk8_excludes.list
 
--overlay-jdk8:
-	$(call overlay_single,jdk8u,jdk/test/com/sun/jdi/BreakpointWithFullGC.sh,$(JDK8_SRCROOT))
-	$(call overlay_single,jdk8u,jdk/test/com/sun/jdi/RedefineCrossEvent.java,$(JDK8_SRCROOT))
-	$(call overlay_single,jdk8u,jdk/test/java/lang/System/Versions.java,$(JDK8_SRCROOT))
-	$(call overlay_single,jdk8u,jdk/test/sun/misc/Version/Version.java,$(JDK8_SRCROOT))
-
--overlay-langtools8:
-	$(call overlay_single,jdk8u,langtools/test/tools/javac/annotations/8218152/MalformedAnnotationProcessorTests.java, $(JDK8_SRCROOT))
-	$(call overlay_single,jdk8u,langtools/test/tools/javac/6508981/TestInferBinaryName.java, $(JDK8_SRCROOT))
-
--overlay-jtreg:
-	$(call overlay_single,jdk8u,test/jtreg-ext/requires/VMProps.java, $(JDK8_SRCROOT))
-
-test_jtreg8: -setup_jtreg8 -overlay-jdk8  -overlay-langtools8 -overlay-jtreg
+test_jtreg8: -setup_jtreg8
 	$(call run_jtreg8_test,$(JDK8_SRCROOT)/$(JT_REPO)/test,$(JT_TEST))
 
 test_jtreg8_cvm8: -setup_jtreg8
 	$(call run_jtreg8_test,$(CVM8_SRCROOT)/test,$(JT_TEST))
 
-test_jtreg8_jdk: -setup_jtreg8 -overlay-jdk8
+test_jtreg8_jdk: -setup_jtreg8
 	$(call run_jtreg8_test,$(JDK8_SRCROOT)/jdk/test,$(JT_TEST),$(JT_OPTS_EXCLUDE))
 
-test_jtreg8_jdk_tier1: -setup_jtreg8 -overlay-jdk8
+test_jtreg8_jdk_tier1: -setup_jtreg8
 	$(eval JT_TEST = ":jdk_tier1")
 	$(call run_jtreg8_test,$(JDK8_SRCROOT)/jdk/test,$(JT_TEST),$(JT_OPTS_EXCLUDE))
 
-test_jtreg8_jdk_core: -setup_jtreg8 -overlay-jdk8
+test_jtreg8_jdk_core: -setup_jtreg8
 	$(eval JT_TEST = ":jdk_core")
 	$(call run_jtreg8_test,$(JDK8_SRCROOT)/jdk/test,$(JT_TEST),$(JT_OPTS_EXCLUDE))
 
-test_jtreg8_hotspot: -setup_jtreg8 -overlay-jtreg
+test_jtreg8_hotspot: -setup_jtreg8
 	$(eval JT_REPO = hotspot)
 	$(call run_jtreg8_test,$(JDK8_SRCROOT)/$(JT_REPO)/test,$(JT_TEST),$(JT_OPTS_EXCLUDE))
 
-test_jtreg8_langtools: -setup_jtreg8 -overlay-langtools8
+test_jtreg8_langtools: -setup_jtreg8
 	$(eval JT_REPO = langtools)
 	$(call run_jtreg8_test,$(JDK8_SRCROOT)/$(JT_REPO)/test,$(JT_TEST),$(JT_OPTS_EXCLUDE))
 
@@ -388,10 +363,10 @@ help:
 	@echo "  make test_jtreg8 JT_TEST=<test selection> JT_REPO=<repo dir>"
 	@echo "                     Run CVM8 jtreg8 test with given selection"
 	@echo "  make test_jtreg8_jdk JT_TEST=<test selection>"
-	@echo "                     Run CVM8 jtreg8 tests in directory jdk8u/jdk/test"
+	@echo "                     Run CVM8 jtreg8 tests in directory $(JDK8_SRCROOT)/jdk/test"
 	@echo "  make test_jtreg8_langtools JT_TEST=<test selection>"
-	@echo "                     Run CVM8 jtreg8 tests in directory jdk8u/langtools/test"
+	@echo "                     Run CVM8 jtreg8 tests in directory $(JDK8_SRCROOT)/langtools/test"
 	@echo "  make test_jtreg8_hotspot JT_TEST=<test selection>"
-	@echo "                     Run CVM8 jtreg8 tests in directory jdk8u/hotspot/test"
+	@echo "                     Run CVM8 jtreg8 tests in directory $(JDK8_SRCROOT)/hotspot/test"
 	@echo "  make test_cvm8 JT_TEST=<test selection>"
 	@echo "                     Run additional jtreg8 tests for CVM8 in directory test"
