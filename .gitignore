@@ -20,3 +20,10 @@ NashornProfile.txt
 /.settings/
 /compile_commands.json
 /.cache
+/.bootjdks
+/.jtreg
+/jdk8
+/jdk17
+/jdk25
+/output
+/build
