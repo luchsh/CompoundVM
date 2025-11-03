@@ -69,7 +69,7 @@ define compile_alt_classes
 	#rm -fr $(ALT_CLS_OUT_DIR)
 	[[ -d $(ALT_CLS_OUT_DIR) ]] || mkdir -p $(ALT_CLS_OUT_DIR)
 
-	$(eval ALT_CLS_LIST=$(BUILDDIR)/alt_kernel.classlist)
+	$(eval ALT_CLS_LIST=$(BUILDDIR)/alt_src.classlist)
 
 	find $(ALT_CLS_SRC_DIR) -type f -name \*.java > $(ALT_CLS_LIST)
 	$(BOOTJDK8)/bin/javac \
@@ -101,7 +101,7 @@ define compile_tools17_bin
 	  -DJAVA_ARGS='{ "-J-ms8m", "$(TOOL_MAIN_CLASS)", }' \
 	  -DAPP_CLASSPATH='{ "/lib/tools17.jar", "/lib/tools.jar", }' \
 	  -o $(BUILDDIR)/bin/$(TOOL_NAME) \
-	  $(CVM8_SRCROOT)/alt_app/tools17/src/share/bin/tool.c \
+	  $(CVM8_SRCROOT)/alt_src/tools17/src/share/bin/tool.c \
 	  -L$(JDK8_LIB_DIR)/$(ARCH_DIR)/jli \
 	  -Wl,-rpath,'$$ORIGIN/../lib/$(ARCH_DIR)/jli' \
 	  -ljli
@@ -171,7 +171,7 @@ jvm-patch: cvm8default17
 	done
 
 -clean-jdk8vm17:
-	rm -fr $(BUILDDIR)/alt_kernel
+	rm -fr $(BUILDDIR)/kernel\*
 	rm -fr $(BUILDDIR)/jdk8
 
 clean:
@@ -260,14 +260,14 @@ build_jdk17u: -bootstrap $(JDK17_SRCROOT)/src
 altkernel: -bootstrap -tools17_jar -tools17_bin 
 	$(eval ALT_KERNEL_JAR=$(BUILDDIR)/rt17.jar)
 	$(eval ALT_KERNEL_BOOT_CP=$(BOOTJDK8)/jre/lib/rt.jar)
-	$(call compile_alt_classes,$(CVM8_SRCROOT)/alt_kernel/src17u,$(BUILDDIR)/alt_kernel/classes_17,$(ALT_KERNEL_JAR),$(ALT_KERNEL_BOOT_CP))
+	$(call compile_alt_classes,$(CVM8_SRCROOT)/alt_src/kernel17,$(BUILDDIR)/kernel17,$(ALT_KERNEL_JAR),$(ALT_KERNEL_BOOT_CP))
 	$(eval ALT_KERNEL_JAR=$(BUILDDIR)/rt8.jar)
-	$(eval ALT_KERNEL_BOOT_CP=$(BUILDDIR)/alt_kernel/classes_17:$(BOOTJDK8)/jre/lib/rt.jar)
-	$(call compile_alt_classes,$(CVM8_SRCROOT)/alt_kernel/src8u,$(BUILDDIR)/alt_kernel/classes_8,$(ALT_KERNEL_JAR),$(ALT_KERNEL_BOOT_CP))
+	$(eval ALT_KERNEL_BOOT_CP=$(BUILDDIR)/kernel17:$(BOOTJDK8)/jre/lib/rt.jar)
+	$(call compile_alt_classes,$(CVM8_SRCROOT)/alt_src/kernel8,$(BUILDDIR)/kernel8,$(ALT_KERNEL_JAR),$(ALT_KERNEL_BOOT_CP))
 
 -tools17_jar: $(BOOTJDK8)/
 	$(eval TOOLS17_JAR=$(BUILDDIR)/tools17.jar)
-	$(call compile_alt_classes,$(CVM8_SRCROOT)/alt_app/tools17/src,$(BUILDDIR)/tools17/classes,$(TOOLS17_JAR),$(BOOTJDK8)/jre/lib/rt.jar:$(BOOTJDK8)/lib/tools.jar)
+	$(call compile_alt_classes,$(CVM8_SRCROOT)/alt_src/tools17/src,$(BUILDDIR)/tools17/classes,$(TOOLS17_JAR),$(BOOTJDK8)/jre/lib/rt.jar:$(BOOTJDK8)/lib/tools.jar)
 
 -tools17_bin: $(BOOTJDK8)/
 	$(call compile_tools17_bin,$(BOOTJDK8)/lib,jinfo17,sun.tools.jinfo.JInfo17)
